@@ -1110,14 +1110,13 @@ public:
 
     volatile int        m_counter;
     volatile uint64     m_ticksTotal;
-
-    // No synchronization
-    double getTotalMs() const { return (double)m_ticksTotal * 1000. / cv::getTickFrequency(); }
-    // No synchronization
-    double getMeanMs() const { return (double)m_ticksTotal * 1000. / (m_counter * cv::getTickFrequency()); }
-
     bool                m_funError;
     bool                m_stopPoint;
+
+    // No synchronization
+    uint64 getMeanTicks() const { return m_ticksTotal/m_counter; }
+    double getTotalMs()   const { return ((double)m_ticksTotal / cv::getTickFrequency()) * 1000; }
+    double getMeanMs()    const { return ((double)getMeanTicks() / cv::getTickFrequency()) * 1000; }
 };
 bool operator==(const NodeData& lhs, const NodeData& rhs);
 

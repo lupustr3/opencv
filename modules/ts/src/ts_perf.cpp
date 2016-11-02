@@ -767,7 +767,7 @@ static void printShift(cv::instr::InstrNode *pNode, cv::instr::InstrNode* pRoot)
 static double calcLocalWeight(cv::instr::InstrNode *pNode)
 {
     if(pNode->m_pParent && pNode->m_pParent->m_pParent)
-        return ((double)pNode->m_payload.m_ticksTotal*100/pNode->m_pParent->m_payload.m_ticksTotal);
+        return ((double)pNode->m_payload.getMeanTicks()*100/pNode->m_pParent->m_payload.getMeanTicks());
     else
         return 100;
 }
@@ -779,7 +779,7 @@ static double calcGlobalWeight(cv::instr::InstrNode *pNode)
     while(globNode->m_pParent && globNode->m_pParent->m_pParent)
         globNode = globNode->m_pParent;
 
-    return ((double)pNode->m_payload.m_ticksTotal*100/(double)globNode->m_payload.m_ticksTotal);
+    return ((double)pNode->m_payload.getMeanTicks()*100/(double)globNode->m_payload.getMeanTicks());
 }
 
 static void printNodeRec(cv::instr::InstrNode *pNode, cv::instr::InstrNode *pRoot)
@@ -892,7 +892,7 @@ static uint64 getNodeTimeRec(cv::instr::InstrNode *pNode, cv::instr::TYPE type, 
 
     if (pNode->m_pParent && (type < 0 || pNode->m_payload.m_instrType == type) && pNode->m_payload.m_implType == impl)
     {
-        ticks = pNode->m_payload.m_ticksTotal;
+        ticks = pNode->m_payload.getMeanTicks();
         return ticks;
     }
 
@@ -918,7 +918,7 @@ static uint64 getTotalTime()
     cv::instr::InstrNode *pRoot = cv::instr::getTrace();
 
     for(size_t i = 0; i < pRoot->m_childs.size(); i++)
-        ticks += pRoot->m_childs[i]->m_payload.m_ticksTotal;
+        ticks += pRoot->m_childs[i]->m_payload.getMeanTicks();
 
     return ticks;
 }
@@ -1856,6 +1856,11 @@ void TestBase::TearDown()
         if (HasFailure())
         {
             reportMetrics(false);
+
+#ifdef ENABLE_INSTRUMENTATION
+            if(cv::instr::useInstrumentation())
+                InstumentData::printTree();
+#endif
             return;
         }
     }
